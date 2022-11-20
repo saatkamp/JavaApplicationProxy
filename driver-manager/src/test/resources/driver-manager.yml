@@ -1,0 +1,16 @@
+sensors:
+  temp-frontdoor:
+    unit: °C
+    qos: 0
+  temp-livingroom:
+    unit: °C
+    qos: 0
+topics:
+  - name: home/livingroom/temperature
+    sensor: temp-frontdoor
+    driver: org.opentosca.driver.noop.NoopDriver
+    connection: tcp://localhost:1883
+  - name: home/frontdoor/temperature
+    sensor: temp-livingroom
+    driver: org.opentosca.driver.noop.NoopDriver
+    connection: tcp://localhost:1883
