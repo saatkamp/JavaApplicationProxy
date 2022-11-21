@@ -1,10 +1,10 @@
 package org.opentosca.driver;
 
-import com.google.common.base.Objects;
-
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import com.google.common.base.Objects;
 
 public final class DriverManagerConfig {
     private Map<String, Map<String, Object>> sensors;
@@ -75,11 +75,11 @@ public final class DriverManagerConfig {
         }
     }
 
-    public static class Topic extends AbstractTopic{
+    public static class Topic extends AbstractTopic {
 
         private String sensor;
 
-                public String getSensor() {
+        public String getSensor() {
             return sensor;
         }
 
@@ -104,6 +104,6 @@ public final class DriverManagerConfig {
         }
     }
 
-    public static class RequestReplyTopic extends AbstractTopic{
+    public static class RequestReplyTopic extends AbstractTopic {
     }
 }

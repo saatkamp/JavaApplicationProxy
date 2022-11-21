@@ -34,7 +34,7 @@ public final class DriverManager {
         this.config = config;
     }
 
-    public <T> void publish(final String sensorName, final T payload) {
+    public <T> void publishToSensor(final String sensorName, final T payload) {
         // (1) Determine topic definitions based on given sensor name
         // (2) Send payload to all topic definitions
         // (3) Therefore, create a connection with the determined driver
@@ -61,6 +61,27 @@ public final class DriverManager {
             throw new RuntimeException(e.getMessage(), e);
         }
         logger.info("Published data to <{}> topic(s)", topics.size());
+    }
+
+    public <T> void publish(final String topic, final T payload) {
+        // (1) Determine topic definitions based on given sensor name
+        // (2) Send payload to all topic definitions
+        // (3) Therefore, create a connection with the determined driver
+        // (4) Publish payload through the created connection (threaded)
+
+        final RequestReplyTopic responseTopic = config.getRequestReplyTopic();
+        responseTopic.name = topic;
+        Connection connection = DriverUtils
+                .forName(responseTopic.driver)
+                .connect(responseTopic);
+        logger.info("Publish payload: {}", payload);
+
+        try {
+            connection.publish(topic, objectMapper.writeValueAsString(payload));
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+        logger.info("Sent message to reply queue \"{}\"", topic);
     }
 
     private Callable<Boolean> callable(final Connection connection, final String topicName, final Message message) {
