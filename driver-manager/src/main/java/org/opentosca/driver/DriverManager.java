@@ -1,5 +1,11 @@
 package org.opentosca.driver;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -9,14 +15,8 @@ import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import static org.opentosca.driver.DriverManagerConfig.Topic;
 import static org.opentosca.driver.DriverManagerConfig.RequestReplyTopic;
+import static org.opentosca.driver.DriverManagerConfig.Topic;
 
 public final class DriverManager {
     private static Logger logger = LoggerFactory.getLogger(DriverManager.class);
@@ -53,7 +53,7 @@ public final class DriverManager {
                 connectionCache.put(topic, conn);
             }
             logger.info("Publish payload: {}", payload);
-            tasks.add(callable(conn, topic.getName(), new Message<>(config.getSensors().get(sensorName), payload)));
+            tasks.add(callable(conn, topic.getName(), new SensorMessage<>(config.getSensors().get(sensorName), payload)));
         }
         try {
             executor.invokeAll(tasks);
@@ -122,15 +122,17 @@ public final class DriverManager {
         }
         conn.subscribe(requestResponseTopic.getName(), m ->
         {
+            logger.info("Parsing message...");
             try {
                 final JavaType messageType = objectMapper.getTypeFactory()
-                        .constructParametricType(Message.class, payloadType);
+                        .constructParametricType(RequestMessage.class, javaType);
                 messageListener.onMessage(objectMapper.readValue(m, messageType));
             } catch (IOException e) {
+                logger.error("Error while parsing message...", e);
                 throw new RuntimeException(e);
             }
         });
-        logger.info("Subscribed to ", requestResponseTopic.getName());
+        logger.info("Subscribed to \"{}\"", requestResponseTopic.getName());
     }
 
     public void close() {

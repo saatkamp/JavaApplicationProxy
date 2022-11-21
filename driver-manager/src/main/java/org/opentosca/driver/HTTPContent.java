@@ -1,12 +1,11 @@
-package org.opentosca.driver.app;
+package org.opentosca.driver;
 
-import java.util.HashMap;
 
-public class RequestMessage {
+public class HTTPContent {
 
     private String method;
     private String path;
-    private HashMap<String, String> headers;
+    private String headers;
     private String payload;
 
     public String getMethod() {
@@ -25,11 +24,11 @@ public class RequestMessage {
         this.path = path;
     }
 
-    public HashMap<String, String> getHeaders() {
+    public String getHeaders() {
         return headers;
     }
 
-    public void setHeaders(HashMap<String, String> headers) {
+    public void setHeaders(String headers) {
         this.headers = headers;
     }
 
@@ -41,4 +40,13 @@ public class RequestMessage {
         this.payload = payload;
     }
 
+    @Override
+    public String toString() {
+        return "HTTPContent{" +
+                "method='" + method + '\'' +
+                ", path='" + path + '\'' +
+                ", headers='" + headers + '\'' +
+                ", payload='" + payload + '\'' +
+                '}';
+    }
 }
