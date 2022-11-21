@@ -11,7 +11,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class Application implements CommandLineRunner, MessageListener<Integer>
+public class Application implements CommandLineRunner, MessageListener<RequestMessage>
 {
   private static Logger logger = LoggerFactory.getLogger(Application.class);
 
@@ -24,14 +24,19 @@ public class Application implements CommandLineRunner, MessageListener<Integer>
   public void run(String... args) throws Exception
   {
     final DriverManager manager = DriverManagerFactory.getDriverManager(args[0]);
-    manager.subscribe("temp-livingroom", this, Integer.class);
+    manager.subscribeReqRes(this, RequestMessage.class);
     Thread.currentThread().join();
     manager.close();
   }
 
   @Override
-  public void onMessage(final Message<Integer> message)
+  public void onMessage(final Message<RequestMessage> message)
   {
+    RequestMessage requestMessage = message.getPayload();
+
+
     logger.info("Received payload: {}", message.getPayload());
+
+
   }
 }

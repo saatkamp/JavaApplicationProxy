@@ -16,116 +16,125 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static org.opentosca.driver.DriverManagerConfig.Topic;
+import static org.opentosca.driver.DriverManagerConfig.RequestReplyTopic;
 
-public final class DriverManager
-{
-  private static Logger logger = LoggerFactory.getLogger(DriverManager.class);
+public final class DriverManager {
+    private static Logger logger = LoggerFactory.getLogger(DriverManager.class);
 
-  private final DriverManagerConfig config;
+    private final DriverManagerConfig config;
 
-  private final ObjectMapper objectMapper = new ObjectMapper();
-  private final Cache<Topic, Connection> connectionCache = CacheBuilder.newBuilder().build();
-  private final ExecutorService executor = Executors.newFixedThreadPool(5);
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final Cache<Topic, Connection> connectionCache = CacheBuilder.newBuilder().build();
 
-  DriverManager(final DriverManagerConfig config)
-  {
-    Preconditions.checkNotNull(config);
-    this.config = config;
-  }
+    private final Cache<RequestReplyTopic, Connection> reqResConnectionCache = CacheBuilder.newBuilder().build();
+    private final ExecutorService executor = Executors.newFixedThreadPool(5);
 
-  public <T> void publish(final String sensorName, final T payload)
-  {
-    // (1) Determine topic definitions based on given sensor name
-    // (2) Send payload to all topic definitions
-    // (3) Therefore, create a connection with the determined driver
-    // (4) Publish payload through the created connection (threaded)
-    final List<Callable<Boolean>> tasks = Lists.newArrayList();
-    if (config.getSensors().get(sensorName) == null) throw new RuntimeException("A valid sensor name must be given");
-    final List<Topic> topics = config.getTopics(sensorName);
-    logger.info("Found <{}> topic(s) to publish data", topics.size());
-    for (final Topic topic : topics)
-    {
-      Connection conn = connectionCache.getIfPresent(topic);
-      if (conn == null)
-      {
-        conn = DriverUtils
-          .forName(topic.getDriver())
-          .connect(topic);
-        connectionCache.put(topic, conn);
-      }
-      logger.info("Publish payload: {}", payload);
-      tasks.add(callable(conn, topic.getName(), new Message<>(config.getSensors().get(sensorName), payload)));
+    DriverManager(final DriverManagerConfig config) {
+        Preconditions.checkNotNull(config);
+        this.config = config;
     }
-    try
-    {
-      executor.invokeAll(tasks);
-    }
-    catch (InterruptedException e)
-    {
-      throw new RuntimeException(e.getMessage(), e);
-    }
-    logger.info("Published data to <{}> topic(s)", topics.size());
-  }
 
-  private Callable<Boolean> callable(final Connection connection, final String topicName, final Message message)
-  {
-    return () ->
-    {
-      try
-      {
-        connection.publish(topicName, objectMapper.writeValueAsString(message));
-      }
-      catch (Exception e)
-      {
-        logger.error(e.getMessage(), e);
-      }
-      return true;
-    };
-  }
-
-  public <T> void subscribe(final String sensorName, MessageListener<T> messageListener, Class<T> payloadType)
-  {
-    final JavaType javaType = objectMapper.getTypeFactory().constructFromCanonical(payloadType.getCanonicalName());
-    this.subscribe(sensorName, messageListener, javaType);
-  }
-
-  public <T> void subscribe(final String sensorName, final MessageListener<T> messageListener, final JavaType payloadType)
-  {
-    // (1) Determine topic definitions based on given type
-    // (2) Subscribe to all topic definitions
-    // (3) Therefore, get a connection with the determined driver
-    final List<Topic> topics = config.getTopics(sensorName);
-    logger.info("Found <{}> topic(s) to subscribe", topics.size());
-    for (final Topic topic : topics)
-    {
-      Connection conn = connectionCache.getIfPresent(topic);
-      if (conn == null)
-      {
-        conn = DriverUtils
-          .forName(topic.getDriver())
-          .connect(topic);
-        connectionCache.put(topic, conn);
-      }
-      conn.subscribe(topic.getName(), m ->
-      {
-        try
-        {
-          final JavaType messageType = objectMapper.getTypeFactory()
-            .constructParametricType(Message.class, payloadType);
-          messageListener.onMessage(objectMapper.readValue(m, messageType));
+    public <T> void publish(final String sensorName, final T payload) {
+        // (1) Determine topic definitions based on given sensor name
+        // (2) Send payload to all topic definitions
+        // (3) Therefore, create a connection with the determined driver
+        // (4) Publish payload through the created connection (threaded)
+        final List<Callable<Boolean>> tasks = Lists.newArrayList();
+        if (config.getSensors().get(sensorName) == null)
+            throw new RuntimeException("A valid sensor name must be given");
+        final List<Topic> topics = config.getTopics(sensorName);
+        logger.info("Found <{}> topic(s) to publish data", topics.size());
+        for (final Topic topic : topics) {
+            Connection conn = connectionCache.getIfPresent(topic);
+            if (conn == null) {
+                conn = DriverUtils
+                        .forName(topic.getDriver())
+                        .connect(topic);
+                connectionCache.put(topic, conn);
+            }
+            logger.info("Publish payload: {}", payload);
+            tasks.add(callable(conn, topic.getName(), new Message<>(config.getSensors().get(sensorName), payload)));
         }
-        catch (IOException e)
-        {
-          throw new RuntimeException(e);
+        try {
+            executor.invokeAll(tasks);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e.getMessage(), e);
         }
-      });
+        logger.info("Published data to <{}> topic(s)", topics.size());
     }
-    logger.info("Subscribed to <{}> topic(s)", topics.size());
-  }
 
-  public void close()
-  {
-    executor.shutdownNow();
-    connectionCache.asMap().values().forEach(Connection::close);
-  }
+    private Callable<Boolean> callable(final Connection connection, final String topicName, final Message message) {
+        return () ->
+        {
+            try {
+                connection.publish(topicName, objectMapper.writeValueAsString(message));
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+            }
+            return true;
+        };
+    }
+
+    public <T> void subscribe(final String sensorName, MessageListener<T> messageListener, Class<T> payloadType) {
+        final JavaType javaType = objectMapper.getTypeFactory().constructFromCanonical(payloadType.getCanonicalName());
+        this.subscribe(sensorName, messageListener, javaType);
+    }
+
+    public <T> void subscribe(final String sensorName, final MessageListener<T> messageListener, final JavaType payloadType) {
+        // (1) Determine topic definitions based on given type
+        // (2) Subscribe to all topic definitions
+        // (3) Therefore, get a connection with the determined driver
+        final List<Topic> topics = config.getTopics(sensorName);
+        logger.info("Found <{}> topic(s) to subscribe", topics.size());
+        for (final Topic topic : topics) {
+            Connection conn = connectionCache.getIfPresent(topic);
+            if (conn == null) {
+                conn = DriverUtils
+                        .forName(topic.getDriver())
+                        .connect(topic);
+                connectionCache.put(topic, conn);
+            }
+            conn.subscribe(topic.getName(), m ->
+            {
+                try {
+                    final JavaType messageType = objectMapper.getTypeFactory()
+                            .constructParametricType(Message.class, payloadType);
+                    messageListener.onMessage(objectMapper.readValue(m, messageType));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        }
+        logger.info("Subscribed to <{}> topic(s)", topics.size());
+    }
+
+    public <T> void subscribeReqRes(MessageListener<T> messageListener, Class<T> payloadType) {
+        final JavaType javaType = objectMapper.getTypeFactory().constructFromCanonical(payloadType.getCanonicalName());
+        // (2) Subscribe to topic
+        // (3) Therefore, get a connection with the determined driver
+        final RequestReplyTopic requestResponseTopic = config.getRequestReplyTopic();
+        Connection conn = reqResConnectionCache.getIfPresent(requestResponseTopic);
+        if (conn == null) {
+            conn = DriverUtils
+                    .forName(requestResponseTopic.getDriver())
+                    .connect(requestResponseTopic);
+            reqResConnectionCache.put(requestResponseTopic, conn);
+        }
+        conn.subscribe(requestResponseTopic.getName(), m ->
+        {
+            try {
+                final JavaType messageType = objectMapper.getTypeFactory()
+                        .constructParametricType(Message.class, payloadType);
+                messageListener.onMessage(objectMapper.readValue(m, messageType));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        logger.info("Subscribed to ", requestResponseTopic.getName());
+    }
+
+    public void close() {
+        executor.shutdownNow();
+        connectionCache.asMap().values().forEach(Connection::close);
+    }
 }
