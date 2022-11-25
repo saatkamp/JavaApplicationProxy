@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import com.sun.net.httpserver.Headers;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -85,7 +86,7 @@ public class Application implements CommandLineRunner, MessageListener<HTTPConte
                 try (CloseableHttpResponse response = client.execute(builder.build())) {
                     HttpEntity entity = response.getEntity();
 
-                    this.manager.publish(req.getReply_to(), new String(entity.getContent().readAllBytes(), StandardCharsets.UTF_8));
+                    this.manager.publish(req.getReply_to(), new String(entity.getContent().readAllBytes(), StandardCharsets.UTF_8).replaceAll("\n", "").replaceAll("\\\"", "\""));
                 }
             } catch (IOException e) {
                 logger.error("Error while creating HTTP request..!", e);
