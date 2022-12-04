@@ -6,7 +6,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import com.sun.net.httpserver.Headers;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -94,10 +93,13 @@ public class Application implements CommandLineRunner, MessageListener<HTTPConte
 
                 String url = topicConfig.proxyFor.protocol
                         + "://"
-                        + topicConfig.proxyFor.location
-                        + ":"
-                        + topicConfig.proxyFor.port
-                        + httpContent.getPath();
+                        + topicConfig.proxyFor.location;
+                if (topicConfig.proxyFor.port != null && !topicConfig.proxyFor.port.isEmpty()) {
+                    url += ":"
+                            + topicConfig.proxyFor.port;
+                }
+
+                url += httpContent.getPath();
                 builder.setUri(url);
 
                 logger.info("Sending request to: {}", builder.getUri());
