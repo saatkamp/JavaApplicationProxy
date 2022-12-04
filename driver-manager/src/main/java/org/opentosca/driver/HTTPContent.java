@@ -1,5 +1,6 @@
 package org.opentosca.driver;
 
+import java.io.InputStream;
 
 public class HTTPContent {
 
