@@ -12,3 +12,7 @@ requestReplyTopic:
   name: job
   driver: org.opentosca.driver.mqtt.MqttDriver
   connection: 193.196.54.255:1883
+  proxyFor:
+    protocol: http
+    location: localhost
+    port: 8080

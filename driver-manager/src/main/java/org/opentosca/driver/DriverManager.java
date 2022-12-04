@@ -34,6 +34,10 @@ public final class DriverManager {
         this.config = config;
     }
 
+    public DriverManagerConfig getConfig() {
+        return config;
+    }
+
     public <T> void publishToSensor(final String sensorName, final T payload) {
         // (1) Determine topic definitions based on given sensor name
         // (2) Send payload to all topic definitions

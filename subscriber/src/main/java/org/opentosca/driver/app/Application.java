@@ -16,6 +16,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicHeader;
 import org.opentosca.driver.DriverManager;
+import org.opentosca.driver.DriverManagerConfig;
 import org.opentosca.driver.DriverManagerFactory;
 import org.opentosca.driver.HTTPContent;
 import org.opentosca.driver.Message;
@@ -89,7 +90,15 @@ public class Application implements CommandLineRunner, MessageListener<HTTPConte
 
                 headers.forEach(builder::addHeader);
 
-                builder.setUri("http://localhost:8080" + httpContent.getPath());
+                DriverManagerConfig.RequestReplyTopic topicConfig = this.manager.getConfig().getRequestReplyTopic();
+
+                String url = topicConfig.proxyFor.protocol
+                        + "://"
+                        + topicConfig.proxyFor.location
+                        + ":"
+                        + topicConfig.proxyFor.port
+                        + httpContent.getPath();
+                builder.setUri(url);
 
                 logger.info("Sending request to: {}", builder.getUri());
 

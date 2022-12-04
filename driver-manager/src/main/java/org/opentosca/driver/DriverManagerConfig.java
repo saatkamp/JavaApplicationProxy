@@ -105,5 +105,13 @@ public final class DriverManagerConfig {
     }
 
     public static class RequestReplyTopic extends AbstractTopic {
+
+        public ProxyLocation proxyFor;
+
+        public static class ProxyLocation {
+            public String protocol;
+            public String location;
+            public String port;
+        }
     }
 }
