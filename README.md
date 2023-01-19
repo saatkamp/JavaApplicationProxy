@@ -55,3 +55,13 @@ java -Dloader.path=.\driver-mqtt\target\driver-mqtt-1.0.jar -jar .\subscriber\ta
 
 The respective drivers are built using Maven's Shade Plugin in order to build a uber JAR containing all dependant libraries.
 During installation, we just have to put the driver JAR file to a certain location on the target host, which is in turn known as the `loader.path` for the subscriber application.
+
+## Haftungsausschluss
+
+Dies ist ein Forschungsprototyp.
+Die Haftung für entgangenen Gewinn, Produktionsausfall, Betriebsunterbrechung, entgangene Nutzungen, Verlust von Daten und Informationen, Finanzierungsaufwendungen sowie sonstige Vermögens- und Folgeschäden ist, außer in Fällen von grober Fahrlässigkeit, Vorsatz und Personenschäden ausgeschlossen.
+
+## Disclaimer of Warranty
+
+Unless required by applicable law or agreed to in writing, Licensor provides the Work (and each Contributor provides its Contributions) on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied, including, without limitation, any warranties or conditions of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A PARTICULAR PURPOSE.
+You are solely responsible for determining the appropriateness of using or redistributing the Work and assume any risks associated with Your exercise of permissions under this License.
